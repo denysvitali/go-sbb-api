@@ -2,9 +2,8 @@ package sbb_api
 
 import (
 	"encoding/json"
-	"github.com/sirupsen/logrus"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -30,11 +29,11 @@ func TestParseResult(t *testing.T){
 	file, err := os.Open("../resources/test/result-1.json")
 	assert.Nil(t, err)
 
-	fileContent, err := ioutil.ReadAll(file)
-	assert.Nil(t, err)
-
 	var connections ConnectionsResult
-	err = json.Unmarshal(fileContent, &connections)
+	decoder := json.NewDecoder(file)
+	decoder.DisallowUnknownFields()
+	err = decoder.Decode(&connections)
 	assert.Nil(t, err)
-	logrus.Printf("%v", connections)
+	//logrus.Printf("%+v\n", connections)
+	spew.Dump(connections)
 }

@@ -13,23 +13,145 @@ import (
 )
 
 type POI struct {
-
 }
 
 type LegendEntry struct {
+}
 
+type Coordinates struct {
+	Latitude  int64 `json:"latitude"`
+	Longitude int64 `json:"longitude"`
+}
+
+type RealtimeInfo struct {
+	DepartureTime string `json:"abfahrtIstZeit"`
+	DepartureDate string `json:"abfahrtIstDatum"`
+
+	ArrivalTime string `json:"ankunkftIstZeit"`
+	ArrivalDate string `json:"ankunkftIstDatum"`
+
+	DeparturePlatformChange bool `json:"abfahrtPlatformChange"`
+	ArrivalPlatformChange   bool `json:"ankunftPlatformChange"`
+
+	DepartureCancellation bool `json:"abfahrtCancellation"`
+	ArrivalCancellation   bool `json:"ankunftCancellation"`
+
+	DepartureDelayUndefined bool `json:"abfahrtDelayUndefined"`
+	ArrivalDelayUndefined   bool `json:"ankunftDelayUndefined"`
+}
+
+type OevIcon = string
+
+const (
+	Zug OevIcon = "ZUG"
+)
+
+// TODO: Fill struct
+type TransportDesignation struct{
+	OevIcon OevIcon `json:"oevIcon"`
+}
+
+type TransportServiceAttribute = string
+type Occupancy string
+
+const (
+	OM TransportServiceAttribute = "OM"
+)
+
+const (
+	Low     Occupancy = "LOW"
+	Unknown Occupancy = "UNKOWN"
+)
+
+type PreviewType string
+
+const (
+	Dusp PreviewType = "DUSP"
+)
+
+type WalkIcon string
+
+const (
+	Pedestrian WalkIcon = "pedestrian"
+)
+
+type Section struct {
+	DepartureTime string `json:"abfahrtTime"`
+	ArrivalTime   string `json:"ankunftTime"`
+
+	DepartureDate string `json:"abfahrtDatum"`
+	ArrivalDate   string `json:"ankunftDatum"`
+
+	DepartureName string `json:"abfahrtName"`
+	ArrivalName   string `json:"ankunftName"`
+
+	DepartureTrack string `json:"abfahrtGleis"`
+	ArrivalTrack   string `json:"ankunftGleis"`
+
+	DepartureTrackLabel string `json:"departureTrackLabel"`
+	ArrivalTrackLabel   string `json:"arrivalTrackLabel"`
+
+	DepartureTrackLabelAccessibility string `json:"departureTrackLabelAccessibility"`
+	ArrivalTrackLabelAccessibility   string `json:"arrivalTrackLabelAccessibility"`
+
+	DepartureCoordinates Coordinates `json:"abfahrtKoordinaten"`
+	ArrivalCoordinates   Coordinates `json:"ankunftKoordinaten"`
+
+	DeparturePlatformChange string `json:"abfahrtPlatformChange"`
+	ArrivalPlatformChange   string `json:"ankunftPlatformChange"`
+
+	DepartureCancellation bool `json:"abfahrtCancellation"`
+	ArrivalCancellation   bool `json:"ankunftCancellation"`
+
+	RealtimeInfo RealtimeInfo `json:"realtimeInfo"`
+
+	TransportDesignation       TransportDesignation        `json:"transportBezeichnung"`
+	PreviewType                PreviewType                 `json:"previewType"`
+	TransportServiceAttributes []TransportServiceAttribute `json:"transportServiceAttributes"`
+	TransportSuggestion        string                      `json:"transportHinweis"`
+
+	DuspUrl                string `json:"duspUrl"`
+	DuspPreviewUrl         string `json:"duspPreviewUrl"`
+	DuspNativeStyleUrl     string `json:"duspNativeStyleUrl"`
+	DuspNativeDarkStyleUrl string `json:"duspNativeDarkStyleUrl"`
+	DuspNativeUrl          string `json:"duspNativeUrl"`
+
+	OccupancyFirst  Occupancy `json:"belegungErste"`
+	OccupancySecond string    `json:"belegungZweite"`
+
+	WalkDescription              string   `json:"walkBezeichnung"`
+	WalkDescriptionAccessibility string   `json:"walkBezeichnungAccessibility"`
+	WalkIcon                     WalkIcon `json:"walkIcon"`
+
+	ActionUrl string `json:"actionUrl"`
+}
+
+type Connection struct {
+	Sections              []Section `json:"verbindungSections"`
+	Destination           string    `json:"ankunft"`
+	Via                   []string  `json:"vias"`
+	Transfers             int32     `json:"transfers"`
+	Duration              string    `json:"duration"`
+	DurationAccessibility string    `json:"durationAccessibility"`
+	DepartureTime         string    `json:"abfahrtTime"`
+	DepartureDate         string    `json:"ankunftDate"`
+	ArrivalTime           string    `json:"ankunftTime"`
+	ArrivalDate           string    `json:"ankunftDate"`
 }
 
 type ConnectionsResult struct {
-	Abfahrt POI `json:"abfahrt"`
-	Ankunft POI `json:"ankunft"`
-	EarlierUrl string `json:"earlierUrl"`
-	LaterUrl string `json:"laterUrl"`
-	LegendBfrItems []LegendEntry `json:"legendBfrItems"`
-	Legend []LegendEntry `json:"legend"`
+	Abfahrt              POI           `json:"abfahrt"`
+	Ankunft              POI           `json:"ankunft"`
+	EarlierUrl           string        `json:"earlierUrl"`
+	LaterUrl             string        `json:"laterUrl"`
+	LegendBfrItems       []LegendEntry `json:"legendBfrItems"`
+	Legend               []LegendEntry `json:"legendItems"`
+	LegendOccupancyItems []LegendEntry `json:"legendOccupancyItems"`
+	ConnectionPriceUrl   string        `json:"verbindungPreisUrl"`
+	Connections          []Connection  `json:"verbindungen"`
 }
 
-const ApiBasePath = "/unauth/fahrplanservice/v1";
+const ApiBasePath = "/unauth/fahrplanservice/v1"
 
 type SbbApi struct {
 	client *http.Client
@@ -71,9 +193,9 @@ func formatConnectionsUrl(from string, to string, at time.Time) string {
 func (s *SbbApi) GetConnections(from string, to string, at time.Time) (*ConnectionsResult, error) {
 	connectionsPath := fmt.Sprintf("%s%s", ApiBasePath, "/verbindungen")
 	connectionsPartial := formatConnectionsUrl(from, to, at)
-	url := fmt.Sprintf("%s%s%s/", ApiEndpoint, connectionsPath, connectionsPartial)
+	reqUrl := fmt.Sprintf("%s%s%s/", ApiEndpoint, connectionsPath, connectionsPartial)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", reqUrl, nil)
 	if err != nil {
 		return nil, err
 	}
