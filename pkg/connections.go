@@ -12,10 +12,30 @@ import (
 	"time"
 )
 
+type Accessibility string
+
+const (
+	Independant Accessibility = "SELBSTAENDIG"
+)
+
+type PoiType string
+
+const (
+	Station PoiType = "STATION"
+)
+
 type POI struct {
+	DisplayName string  `json:"displayName"`
+	ExternalId  string  `json:"externalId"`
+	Type        PoiType `json:"type"`
+	Coordinates
+	Accessibility Accessibility `json:"barriereFreiheit"`
 }
 
 type LegendEntry struct {
+	Code        string   `json:"code"`
+	Description string   `json:"description"`
+	Actions     []string `json:"actions"`
 }
 
 type Coordinates struct {
@@ -27,8 +47,8 @@ type RealtimeInfo struct {
 	DepartureTime string `json:"abfahrtIstZeit"`
 	DepartureDate string `json:"abfahrtIstDatum"`
 
-	ArrivalTime string `json:"ankunkftIstZeit"`
-	ArrivalDate string `json:"ankunkftIstDatum"`
+	ArrivalTime string `json:"ankunftIstZeit"`
+	ArrivalDate string `json:"ankunftIstDatum"`
 
 	DeparturePlatformChange bool `json:"abfahrtPlatformChange"`
 	ArrivalPlatformChange   bool `json:"ankunftPlatformChange"`
@@ -38,6 +58,15 @@ type RealtimeInfo struct {
 
 	DepartureDelayUndefined bool `json:"abfahrtDelayUndefined"`
 	ArrivalDelayUndefined   bool `json:"ankunftDelayUndefined"`
+
+	Icon                        string `json:"icon"`
+	DetailMessage               string `json:"detailMsg"`
+	CancellationMessage         string `json:"cancellationMsg"`
+	PlatformChange              string `json:"platformChange"`
+	NextAlternative             string `json:"nextAlternative"`
+	AlternativeMessage          string `json:"alternativeMsg"`
+	DetailsMessageAccessibility string `json:"detailsMsgAccessibility"`
+	IsAlternative               bool   `json:"isAlternative"`
 }
 
 type OevIcon = string
@@ -46,9 +75,23 @@ const (
 	Zug OevIcon = "ZUG"
 )
 
-// TODO: Fill struct
-type TransportDesignation struct{
-	OevIcon OevIcon `json:"oevIcon"`
+type TransportIcon string
+
+const (
+	Re TransportIcon = "RE"
+	Ic TransportIcon = "IC"
+)
+
+type TransportDesignation struct {
+	OevIcon                 OevIcon       `json:"oevIcon"`
+	TransportIcon           TransportIcon `json:"transportIcon"`
+	TransportIconSuffix     string        `json:"transportIconSuffix"`
+	TransportLabel          string        `json:"transportLabel"`
+	TransportText           string        `json:"transportText"`
+	TransportName           string        `json:"transportName"`
+	TransportDirection      string        `json:"transportDirection"`
+	TransportLabelBgColor   string        `json:"transportLabelBgColor"`
+	TransportLabelTextColor string        `json:"transportLabelTextColor"`
 }
 
 type TransportServiceAttribute = string
@@ -76,39 +119,30 @@ const (
 )
 
 type Section struct {
-	DepartureTime string `json:"abfahrtTime"`
-	ArrivalTime   string `json:"ankunftTime"`
+	SectionConnection
 
-	DepartureDate string `json:"abfahrtDatum"`
-	ArrivalDate   string `json:"ankunftDatum"`
+	// Departure
+	DepartureCancellation   bool        `json:"abfahrtCancellation"`
+	DepartureDate           string      `json:"abfahrtDatum"`
+	DepartureTrack          string      `json:"abfahrtGleis"`
+	DepartureCoordinates    Coordinates `json:"abfahrtKoordinaten"`
+	DepartureName           string      `json:"abfahrtName"`
+	DeparturePlatformChange bool        `json:"abfahrtPlatformChange"`
 
-	DepartureName string `json:"abfahrtName"`
-	ArrivalName   string `json:"ankunftName"`
+	ActionUrl string `json:"actionUrl"`
 
-	DepartureTrack string `json:"abfahrtGleis"`
-	ArrivalTrack   string `json:"ankunftGleis"`
+	// Arrival
+	ArrivalCancellation            bool        `json:"ankunftCancellation"`
+	ArrivalDate                    string      `json:"ankunftDatum"`
+	ArrivalTrack                   string      `json:"ankunftGleis"`
+	ArrivalCoordinates             Coordinates `json:"ankunftKoordinaten"`
+	ArrivalName                    string      `json:"ankunftName"`
+	ArrivalPlatformChange          bool        `json:"ankunftPlatformChange"`
+	ArrivalTrackLabel              string      `json:"arrivalTrackLabel"`
+	ArrivalTrackLabelAccessibility string      `json:"arrivalTrackLabelAccessibility"`
 
-	DepartureTrackLabel string `json:"departureTrackLabel"`
-	ArrivalTrackLabel   string `json:"arrivalTrackLabel"`
-
+	DepartureTrackLabel              string `json:"departureTrackLabel"`
 	DepartureTrackLabelAccessibility string `json:"departureTrackLabelAccessibility"`
-	ArrivalTrackLabelAccessibility   string `json:"arrivalTrackLabelAccessibility"`
-
-	DepartureCoordinates Coordinates `json:"abfahrtKoordinaten"`
-	ArrivalCoordinates   Coordinates `json:"ankunftKoordinaten"`
-
-	DeparturePlatformChange string `json:"abfahrtPlatformChange"`
-	ArrivalPlatformChange   string `json:"ankunftPlatformChange"`
-
-	DepartureCancellation bool `json:"abfahrtCancellation"`
-	ArrivalCancellation   bool `json:"ankunftCancellation"`
-
-	RealtimeInfo RealtimeInfo `json:"realtimeInfo"`
-
-	TransportDesignation       TransportDesignation        `json:"transportBezeichnung"`
-	PreviewType                PreviewType                 `json:"previewType"`
-	TransportServiceAttributes []TransportServiceAttribute `json:"transportServiceAttributes"`
-	TransportSuggestion        string                      `json:"transportHinweis"`
 
 	DuspUrl                string `json:"duspUrl"`
 	DuspPreviewUrl         string `json:"duspPreviewUrl"`
@@ -116,27 +150,83 @@ type Section struct {
 	DuspNativeDarkStyleUrl string `json:"duspNativeDarkStyleUrl"`
 	DuspNativeUrl          string `json:"duspNativeUrl"`
 
-	OccupancyFirst  Occupancy `json:"belegungErste"`
-	OccupancySecond string    `json:"belegungZweite"`
+	DurationPercentage string `json:"durationProzent"`
+
+	FormationUrl string       `json:"formationUrl"`
+	PreviewType  PreviewType  `json:"previewType"`
+	RealtimeInfo RealtimeInfo `json:"realtimeInfo"`
+
+	TransportDesignation       TransportDesignation        `json:"transportBezeichnung"`
+	TransportSuggestion        string                      `json:"transportHinweis"`
+	TransportServiceAttributes []TransportServiceAttribute `json:"transportServiceAttributes"`
+
+	Type string `json:"type"`
 
 	WalkDescription              string   `json:"walkBezeichnung"`
 	WalkDescriptionAccessibility string   `json:"walkBezeichnungAccessibility"`
 	WalkIcon                     WalkIcon `json:"walkIcon"`
+}
 
-	ActionUrl string `json:"actionUrl"`
+type SectionConnection struct {
+	DepartureTime string `json:"abfahrtTime"`
+	ArrivalTime   string `json:"ankunftTime"`
+
+	DepartureCancellation bool `json:"abfahrtCancellation"`
+	ArrivalCancellation   bool `json:"ankunftCancellation"`
+
+	DepartureTrack string `json:"abfahrtGleis"`
+
+	OccupancyFirst  Occupancy `json:"belegungErste"`
+	OccupancySecond string    `json:"belegungZweite"`
+
+	RealtimeInfo RealtimeInfo `json:"realtimeInfo"`
+}
+
+type TicketingInfo struct {
+	ButtonText    string `json:"buttonText"`
+	DialogMessage string `json:"dialogMessage"`
+	DialogTitle   string `json:"dialogTitle"`
+	IsAvailable   bool   `json:"isAvailable"`
 }
 
 type Connection struct {
-	Sections              []Section `json:"verbindungSections"`
-	Destination           string    `json:"ankunft"`
-	Via                   []string  `json:"vias"`
-	Transfers             int32     `json:"transfers"`
-	Duration              string    `json:"duration"`
-	DurationAccessibility string    `json:"durationAccessibility"`
-	DepartureTime         string    `json:"abfahrtTime"`
-	DepartureDate         string    `json:"ankunftDate"`
-	ArrivalTime           string    `json:"ankunftTime"`
-	ArrivalDate           string    `json:"ankunftDate"`
+	SectionConnection
+
+	DepartureDate string `json:"abfahrtDate"`
+	ArrivalDate   string `json:"ankunftDate"` // Can't merge w/ Section because this field is name .*Datum
+
+	DayDifference              string `json:"dayDifference"`
+	DayDifferenceAccessibility string `json:"dayDifferenceAccessibility"`
+
+	DepartureTrackLabel              string `json:"departureTrackLabel"`
+	DepartureTrackLabelAccessibility string `json:"departureTrackLabelAccessibility"`
+
+	Departure   string `json:"abfahrt"`
+	Destination string `json:"ankunft"`
+
+	Duration              string `json:"duration"`
+	DurationAccessibility string `json:"durationAccessibility"`
+
+	IsInternationalConnection bool `json:"isInternationalVerbindung"`
+
+	LegendBfrItems       []LegendEntry `json:"legendBfrItems"`
+	LegendItems          []LegendEntry `json:"legendItems"`
+	LegendOccupancyItems []LegendEntry `json:"legendOccupancyItems"`
+
+	ReconstructionContext string   `json:"reconstructionContext"`
+	ServiceAttributes     []string `json:"serviceAttributes"`
+
+	TicketingInfo        TicketingInfo        `json:"ticketingInfo"`
+	Transfers            int32                `json:"transfers"`
+	TransportDesignation TransportDesignation `json:"transportBezeichnung"`
+
+	ConnectionDiscountContext string    `json:"verbindungAbpreisContext"`
+	ConnectionId              string    `json:"verbindungId"`
+	Sections                  []Section `json:"verbindungSections"`
+	TrafficStage              []string  `json:"verkehrstage"`
+	Via                       []string  `json:"vias"`
+	SurchargeObligation       bool      `json:"zuschlagspflicht"`
+	OfferUrl                  string    `json:"angeboteUrl"`
 }
 
 type ConnectionsResult struct {
