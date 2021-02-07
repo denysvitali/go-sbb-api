@@ -241,7 +241,8 @@ type ConnectionsResult struct {
 	Connections          []Connection  `json:"verbindungen"`
 }
 
-const ApiBasePath = "/unauth/fahrplanservice/v1"
+const FahrplanV1 = "/unauth/fahrplanservice/v1"
+const FahrplanV2 = "/unauth/fahrplanservice/v2"
 
 type SbbApi struct {
 	client *http.Client
@@ -281,8 +282,8 @@ func formatConnectionsUrl(from string, to string, at time.Time) string {
 }
 
 func (s *SbbApi) GetConnections(from string, to string, at time.Time) (*ConnectionsResult, error) {
-	connectionsPath := fmt.Sprintf("%s%s", ApiBasePath, "/verbindungen")
-	connectionsPartial := formatConnectionsUrl(from, to, at)
+	connectionsPath := fmt.Sprintf("%s%s", FahrplanV1, "/verbindungen")
+	connectionsPartial := formatConnectionsUrl(url.PathEscape(from), url.PathEscape(to), at)
 	reqUrl := fmt.Sprintf("%s%s%s/", ApiEndpoint, connectionsPath, connectionsPartial)
 
 	req, err := http.NewRequest("GET", reqUrl, nil)
@@ -309,4 +310,40 @@ func (s *SbbApi) GetConnections(from string, to string, at time.Time) (*Connecti
 	}
 
 	return &connectionResult, nil
+}
+
+type TrainRoute struct {
+	TransportDesignation TransportDesignation `json:"transportBezeichnung"`
+	ServiceAttributes    []string             `json:"serviceAttributes"`
+	Stations             []POI                `json:"stations"`
+	TrafficStage         []string             `json:"verkehrstage"`
+	LegendItems          []LegendEntry        `json:"legendItems"`
+	LegendOccupancyItems []LegendEntry        `json:"legendOccupancyItems"`
+	RefreshUrl           string               `json:"refreshUrl"`
+	RealtimeAnnounces    string               `json:"realtimeMeldungen"`
+}
+
+type Departure struct {
+	FromStation            POI        `json:"vonHaltestelle"`
+	DepartureAt            string     `json:"abfahrt"`
+	DepartureDate          string     `json:"abfahrtDatum"`
+	EffectiveDeparture     string     `json:"abfahrtAktuell"`
+	EffectiveDepartureDate string     `json:"abfahrtAktuellDatum"`
+	Direction              string     `json:"richtung"`
+	Platform               string     `json:"gleis"`
+	PlatformChange         bool       `json:"platformChange"`
+	Cancellation           bool       `json:"cancellation"`
+	Delayed                bool       `json:"delayed"`
+	TransportNewStops      bool       `json:"transportNewStops"`
+	TransportPassageStops  bool       `json:"transportPassageStops"`
+	HasAlternativeStop     bool       `json:"hasAlternativeStop"`
+	TrainFormation         *string    `json:"zugformation"`
+	TrainRoute             TrainRoute `json:"zuglauf"`
+	AlternativeStop        bool       `json:"alternativeStop"`
+}
+
+type DepartureTable struct {
+	FromStation POI         `json:"abHaltestelle"`
+	Departures  []Departure `json:"abfahrts"`
+	TrackLabel  string      `json:"trackLabel"`
 }
